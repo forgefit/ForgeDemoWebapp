@@ -1,0 +1,43 @@
+.popup {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 15px;
+    border-radius: 4px;
+    font-size: 14px;
+    z-index: 1000;
+  }
+  
+  .success {
+    background-color: #4caf50;
+    color: white;
+  }
+  
+  .error {
+    background-color: #f44336;
+    color: white;
+  }
+  
+  /* login.css */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+  }
+  
+  .logo {
+    width: 150px;
+    display: block;
+    margin: 20px auto;
+  }
+  
+  .form-container {
+    max-width: 300px;
+    width: 100%;
+  }
+  

@@ -1,0 +1,1 @@
+export const SERVER_URL="https://y3nh2ep1vh.execute-api.us-east-1.amazonaws.com/prod";
