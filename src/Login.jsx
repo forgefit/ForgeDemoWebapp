@@ -12,15 +12,28 @@ const Login = () => {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-
+  
     try {
-      await axios.post(SERVER_URL+'/api/participants/', { email });
+      // Create a new FormData instance
+      const formData = new FormData();
+  
+      // Append the email field to the form data
+      formData.append('email', email);
+  
+      // Send the form data using axios
+      await axios.post(SERVER_URL + '/api/register_participant/', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
       setStatus('success');
+      alert('Participant registered successfully.');
     } catch (error) {
       console.error('Error registering participant:', error);
       setStatus('error');
     }
   };
+  
 
   const renderPopup = () => {
     if (status === 'success') {
