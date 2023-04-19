@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { collection, getDocs, doc, getFirestore } from 'firebase/firestore';
+import { collection, getDocs, doc, getFirestore, onSnapshot, query } from 'firebase/firestore';
 import { firestore } from './firebaseConfig';
 import { useParams } from 'react-router-dom';
 
@@ -26,7 +26,6 @@ const Leaderboard = () => {
 
     const fetchData = async () => {
       const demoUsersRef = collection(firestore, 'DEMO_USERS');
-
       let leaderboard = [];
 
       const usersSnapshot = await getDocs(demoUsersRef);
@@ -62,8 +61,27 @@ const Leaderboard = () => {
       setLeaderboardData(leaderboard);
     };
 
-    fetchData();
-  }, [selectedExercise]);
+    const exerciseUnsubscribes = [];
+
+    const subscribeToExercises = async () => {
+      const demoUsersRef = collection(firestore, 'DEMO_USERS');
+      const usersSnapshot = await getDocs(demoUsersRef);
+      
+      for (const userDoc of usersSnapshot.docs) {
+        const exerciseRef = collection(userDoc.ref, selectedExercise);
+        const unsubscribe = onSnapshot(exerciseRef, () => {
+          fetchData();
+        });
+        exerciseUnsubscribes.push(unsubscribe);
+      }
+    };
+
+    subscribeToExercises();
+
+    return () => {
+      exerciseUnsubscribes.forEach(unsubscribe => unsubscribe());
+    };
+  }, [selectedExercise, sortBy]);
 
   const handleExerciseChange = (event) => {
     setSelectedExercise(event.target.value);
