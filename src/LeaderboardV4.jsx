@@ -5,35 +5,12 @@ import { useParams } from 'react-router-dom';
 
 const Leaderboard = () => {
   const { sortBy } = useParams();
-  const [exercises, setExercises] = useState([]);
-  const [selectedExercise, setSelectedExercise] = useState(null);
   const [leaderboardData, setLeaderboardData] = useState([]);
 
-  useEffect(() => {
-    const fetchExercises = async () => {
-      const exercisesRef = collection(firestore, 'DEMO_EXERCISES');
-      const snapshot = await getDocs(exercisesRef);
-      const exercisesList = snapshot.docs.map((doc) => doc.id);
-      setExercises(exercisesList);
-      setSelectedExercise(exercisesList[0]);
-    };
-
-    fetchExercises();
-  }, []);
+  const exerciseName = 'Lateral Raises';
 
   useEffect(() => {
-    if (!selectedExercise) return;
-
-    let exerciseUnsubscribes = [];
-
-    const updateLeaderboard = (leaderboard) => {
-      if (sortBy === 'strength') {
-        leaderboard.sort((a, b) => b.peak_strength - a.peak_strength);
-      } else {
-        leaderboard.sort((a, b) => b.peak_volume - a.peak_volume);
-      }
-      setLeaderboardData(leaderboard);
-    };
+    if (!exerciseName) return;
 
     const fetchData = async () => {
       const demoUsersRef = collection(firestore, 'DEMO_USERS');
@@ -42,7 +19,7 @@ const Leaderboard = () => {
       const usersSnapshot = await getDocs(demoUsersRef);
       for (const userDoc of usersSnapshot.docs) {
         const userEmail = userDoc.id;
-        const exerciseRef = collection(userDoc.ref, selectedExercise);
+        const exerciseRef = collection(userDoc.ref, exerciseName);
 
         const exerciseSnapshot = await getDocs(exerciseRef);
         let bestStrength = -1;
@@ -63,47 +40,41 @@ const Leaderboard = () => {
           });
         }
       }
+      if (sortBy === 'strength'){
+        leaderboard.sort((a, b) => b.peak_strength - a.peak_strength);
+      } else {
+        leaderboard.sort((a, b) => b.peak_volume - a.peak_volume);
+      }
+      
+      setLeaderboardData(leaderboard);
+    };
 
-      updateLeaderboard(leaderboard);
+    const exerciseUnsubscribes = [];
 
-      // Unsubscribe the previous exercise listeners
-      exerciseUnsubscribes.forEach((unsubscribe) => unsubscribe());
-      exerciseUnsubscribes = [];
-
-      // Subscribe to exercise updates for all users
+    const subscribeToExercises = async () => {
+      const demoUsersRef = collection(firestore, 'DEMO_USERS');
+      const usersSnapshot = await getDocs(demoUsersRef);
+      
       for (const userDoc of usersSnapshot.docs) {
-        const exerciseRef = collection(userDoc.ref, selectedExercise);
-        const unsubscribe = onSnapshot(exerciseRef, fetchData);
+        const exerciseRef = collection(userDoc.ref, exerciseName);
+        const unsubscribe = onSnapshot(exerciseRef, () => {
+          fetchData();
+        });
         exerciseUnsubscribes.push(unsubscribe);
       }
     };
 
-    fetchData();
+    subscribeToExercises();
 
     return () => {
-      exerciseUnsubscribes.forEach((unsubscribe) => unsubscribe());
+      exerciseUnsubscribes.forEach(unsubscribe => unsubscribe());
     };
-  }, [selectedExercise, sortBy]);
-
-  const handleExerciseChange = (event) => {
-    setSelectedExercise(event.target.value);
-  };
+  }, [exerciseName, sortBy]);
 
   return (
     <div>
       <h1>Leaderboard</h1>
-      <label htmlFor="exercise-select">Select exercise:</label>
-      <select
-        id="exercise-select"
-        value={selectedExercise}
-        onChange={handleExerciseChange}
-      >
-        {exercises.map((exercise) => (
-          <option key={exercise} value={exercise}>
-            {exercise}
-          </option>
-        ))}
-      </select>
+      <h2>{exerciseName}</h2>
       <table>
         <thead>
           <tr>
